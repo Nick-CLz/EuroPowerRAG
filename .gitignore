@@ -1,0 +1,17 @@
+.env
+.claude/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+chroma_db/
+data/raw/*.jsonl
+data/raw/pdfs/*.pdf
+data/processed/*.jsonl
+.DS_Store
+*.egg-info/
+dist/
+build/
+.pytest_cache/

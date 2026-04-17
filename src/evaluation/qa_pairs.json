@@ -1,0 +1,82 @@
+[
+  {
+    "id": "q01",
+    "question": "What was the average day-ahead electricity price for Germany last week?",
+    "relevant_keywords": ["germany", "DE_LU", "day-ahead", "price", "EUR/MWh"],
+    "relevant_doc_types": ["price_data"],
+    "relevant_countries": ["DE_LU"],
+    "notes": "Should retrieve recent DE_LU price_data documents"
+  },
+  {
+    "id": "q02",
+    "question": "What share of France's electricity generation comes from nuclear power?",
+    "relevant_keywords": ["france", "nuclear", "generation", "FR"],
+    "relevant_doc_types": ["generation_data"],
+    "relevant_countries": ["FR"],
+    "notes": "Should retrieve FR generation_data documents containing nuclear figures"
+  },
+  {
+    "id": "q03",
+    "question": "How does Germany's renewable energy mix break down between wind and solar?",
+    "relevant_keywords": ["germany", "wind", "solar", "renewable", "generation"],
+    "relevant_doc_types": ["generation_data"],
+    "relevant_countries": ["DE_LU"],
+    "notes": "Should retrieve DE_LU generation_data with wind and solar breakdown"
+  },
+  {
+    "id": "q04",
+    "question": "What are current day-ahead electricity prices in the Netherlands?",
+    "relevant_keywords": ["netherlands", "NL", "day-ahead", "price"],
+    "relevant_doc_types": ["price_data"],
+    "relevant_countries": ["NL"],
+    "notes": "Should retrieve NL price_data documents"
+  },
+  {
+    "id": "q05",
+    "question": "How does Great Britain's power generation mix compare to France?",
+    "relevant_keywords": ["great britain", "GB", "france", "FR", "generation", "mix"],
+    "relevant_doc_types": ["generation_data"],
+    "relevant_countries": ["GB", "FR"],
+    "notes": "Should retrieve both GB and FR generation_data"
+  },
+  {
+    "id": "q06",
+    "question": "What factors are currently driving European electricity prices higher?",
+    "relevant_keywords": ["price", "electricity", "European", "drivers", "market"],
+    "relevant_doc_types": ["news", "price_data"],
+    "relevant_countries": null,
+    "notes": "Cross-document question — should retrieve news articles about price drivers"
+  },
+  {
+    "id": "q07",
+    "question": "What is the latest news on French nuclear power plant availability?",
+    "relevant_keywords": ["france", "nuclear", "availability", "outage"],
+    "relevant_doc_types": ["news"],
+    "relevant_countries": ["FR"],
+    "notes": "Should retrieve news articles mentioning French nuclear"
+  },
+  {
+    "id": "q08",
+    "question": "How do day-ahead prices differ between Spain and Germany?",
+    "relevant_keywords": ["spain", "ES", "germany", "DE_LU", "day-ahead", "price", "EUR/MWh"],
+    "relevant_doc_types": ["price_data"],
+    "relevant_countries": ["ES", "DE_LU"],
+    "notes": "Cross-country comparison — should retrieve ES and DE_LU price_data"
+  },
+  {
+    "id": "q09",
+    "question": "What role does wind power play in European electricity generation?",
+    "relevant_keywords": ["wind", "generation", "MW", "capacity"],
+    "relevant_doc_types": ["generation_data", "news"],
+    "relevant_countries": null,
+    "notes": "Broad question — should retrieve multiple countries' generation data"
+  },
+  {
+    "id": "q10",
+    "question": "What are the latest regulatory developments in European energy markets?",
+    "relevant_keywords": ["regulation", "policy", "european", "energy", "market"],
+    "relevant_doc_types": ["news", "report"],
+    "relevant_countries": null,
+    "notes": "Policy question — should retrieve news and report documents"
+  }
+]
