@@ -91,7 +91,7 @@ def _generate(question: str, context_docs: list[Document]) -> str:
     user_message = f"Context documents:\n\n{context_text}\n\n---\n\nQuestion: {question}"
     client = _get_client()
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=user_message,
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
