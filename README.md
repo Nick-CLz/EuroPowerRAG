@@ -22,15 +22,15 @@ graph LR
     B[RSS Feeds<br/>EIA · Ember · BBC · Guardian] --> D
     C[PDF Reports<br/>ACER · IEA] --> D
     D --> E[LangChain<br/>RecursiveCharacterTextSplitter]
-    E --> F[OpenAI<br/>text-embedding-3-small]
+    E --> F[Google AI Studio<br/>text-embedding-004]
     F --> G[(ChromaDB<br/>Local vector index)]
     H[User Query] --> I[Retriever<br/>+ Metadata Filter]
     G --> I
-    I --> J[Anthropic<br/>claude-sonnet-4-6<br/>with prompt caching]
+    I --> J[Google AI Studio<br/>Gemini 2.0 Flash<br/>free tier]
     J --> K[Answer + Citations]
 ```
 
-**Stack:** Python 3.11 · LangChain 0.3 · ChromaDB · Anthropic API · Streamlit · APScheduler
+**Stack:** Python 3.11 · LangChain 0.3 · ChromaDB · Google AI Studio (free) · Streamlit · APScheduler
 
 ---
 
@@ -44,9 +44,9 @@ Commodity traders have precise data requirements: *"German prices, last 7 days"*
 
 ChromaDB is local, persistent, and free — appropriate for a single-node research tool. It supports the metadata filtering this use-case needs (`$in`, `$gte`, `$lte`), runs in-process with no network latency, and keeps the setup at `pip install + python ingest.py`. Pinecone makes sense when you need distributed writes, >1M vectors, or team-shared indices; none of those requirements apply here.
 
-### Why direct Anthropic SDK over LangChain LLM wrapper
+### Why Google AI Studio (free tier)
 
-The generation step uses `anthropic` directly (not `langchain_anthropic`) to enable **prompt caching** with fine-grained `cache_control` markers. The system prompt — instructions that never change — is marked `ephemeral` and cached across all queries. On repeated queries this typically cuts generation cost by ~70% and latency by ~30%. LangChain's wrapper supports caching but abstracts away the cache_control API surface needed to validate it's working.
+Both embeddings (`text-embedding-004`) and generation (`gemini-2.0-flash`) run on Google AI Studio's free tier — no credit card required for typical research volumes. The direct `google-generativeai` SDK is used for generation rather than the LangChain wrapper, keeping the generation layer thin and easy to swap as model versions improve.
 
 ### Chunk sizing by document type
 
@@ -73,7 +73,7 @@ pip install -r requirements.txt
 
 # 2. Configure API keys
 cp .env.example .env
-# Edit .env: add ENTSOE_API_TOKEN, OPENAI_API_KEY, ANTHROPIC_API_KEY
+# Edit .env: add GOOGLE_API_KEY (free at aistudio.google.com) + ENTSOE_API_TOKEN
 
 # 3. Ingest data and build the index
 python ingest.py
@@ -110,7 +110,7 @@ EuroPowerRAG/
 │   │   └── pdf_loader.py       # PDF reports (local files + URLs)
 │   ├── pipeline/
 │   │   ├── chunker.py          # Type-aware chunking + ChromaDB indexing
-│   │   └── rag_chain.py        # Retrieval + Anthropic generation
+│   │   └── rag_chain.py        # Retrieval + Gemini generation
 │   └── evaluation/
 │       ├── evaluator.py        # Precision@5 + Faithfulness eval
 │       └── qa_pairs.json       # 10 curated Q&A test cases

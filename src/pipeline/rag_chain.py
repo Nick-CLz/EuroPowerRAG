@@ -1,22 +1,21 @@
 """Core RAG chain.
 
 Retrieval: LangChain + ChromaDB with metadata filtering.
-Generation: Anthropic claude-sonnet-4-6 via direct SDK call with prompt caching.
+Generation: Google Gemini 2.0 Flash via google-genai SDK.
 
-Prompt caching is applied to the system instructions, which are identical across
-all queries. This cuts cost and latency on repeated questions.
+Using Google AI Studio free tier — get your key at https://aistudio.google.com/app/apikey
 """
 
 import os
 from dataclasses import dataclass, field
 
-import anthropic
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
 
-from src.pipeline.chunker import CHROMA_DIR, COLLECTION_NAME
+from src.pipeline.chunker import CHROMA_DIR, COLLECTION_NAME, _get_embeddings
 
 load_dotenv()
 
@@ -32,21 +31,20 @@ Rules:
 - Format your answer in clear paragraphs. Start with the direct answer, then supporting detail.
 - At the end, list the sources you used under a "Sources" heading."""
 
-_anthropic_client: anthropic.Anthropic | None = None
+_genai_client: genai.Client | None = None
 
 
-def _get_client() -> anthropic.Anthropic:
-    global _anthropic_client
-    if _anthropic_client is None:
-        _anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-    return _anthropic_client
+def _get_client() -> genai.Client:
+    global _genai_client
+    if _genai_client is None:
+        _genai_client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+    return _genai_client
 
 
 def _get_vectorstore() -> Chroma:
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     return Chroma(
         persist_directory=str(CHROMA_DIR),
-        embedding_function=embeddings,
+        embedding_function=_get_embeddings(),
         collection_name=COLLECTION_NAME,
     )
 
@@ -91,22 +89,16 @@ def _format_context(docs: list[Document]) -> str:
 def _generate(question: str, context_docs: list[Document]) -> str:
     context_text = _format_context(context_docs)
     user_message = f"Context documents:\n\n{context_text}\n\n---\n\nQuestion: {question}"
-
     client = _get_client()
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1500,
-        # Cache the system prompt — it's constant across all queries
-        system=[
-            {
-                "type": "text",
-                "text": SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
-        messages=[{"role": "user", "content": user_message}],
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=user_message,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            max_output_tokens=1500,
+        ),
     )
-    return response.content[0].text
+    return response.text
 
 
 @dataclass

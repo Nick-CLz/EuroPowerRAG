@@ -7,7 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from tqdm import tqdm
 
@@ -35,6 +35,13 @@ def _get_splitter(doc_type: str) -> RecursiveCharacterTextSplitter:
         chunk_size=cfg["chunk_size"],
         chunk_overlap=cfg["chunk_overlap"],
         length_function=len,
+    )
+
+
+def _get_embeddings() -> GoogleGenerativeAIEmbeddings:
+    return GoogleGenerativeAIEmbeddings(
+        model="models/text-embedding-004",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
     )
 
 
@@ -68,7 +75,7 @@ def build_chunks(raw_docs: list[dict]) -> list[Document]:
 
 def get_vectorstore(embeddings=None) -> Chroma:
     if embeddings is None:
-        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+        embeddings = _get_embeddings()
     return Chroma(
         persist_directory=str(CHROMA_DIR),
         embedding_function=embeddings,
@@ -77,7 +84,7 @@ def get_vectorstore(embeddings=None) -> Chroma:
 
 
 def index_documents(chunks: list[Document], batch_size: int = 100) -> Chroma:
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    embeddings = _get_embeddings()
     vectorstore = get_vectorstore(embeddings)
 
     print(f"  Indexing {len(chunks)} chunks into ChromaDB (batch_size={batch_size})...")

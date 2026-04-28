@@ -5,7 +5,7 @@ Run:  python -m src.evaluation.evaluator
 Metrics:
   - Retrieval Precision@5: fraction of top-5 retrieved docs containing
     at least one relevant keyword for the question.
-  - Answer Faithfulness: Claude judges whether the answer is grounded in
+  - Answer Faithfulness: Gemini judges whether the answer is grounded in
     the retrieved context (scored 0–1 per question).
 
 Results are printed to stdout and saved to data/eval_results.json.
@@ -16,7 +16,7 @@ import os
 import time
 from pathlib import Path
 
-import anthropic
+from google import genai
 from dotenv import load_dotenv
 
 from src.pipeline import rag_chain
@@ -64,9 +64,9 @@ def answer_faithfulness(
     question: str,
     answer: str,
     context_docs: list,
-    client: anthropic.Anthropic,
+    client: genai.Client,
 ) -> tuple[float, str]:
-    """Use Claude to score whether the answer is grounded in the context."""
+    """Use Gemini Flash to score whether the answer is grounded in the context."""
     context_text = "\n\n".join(doc.page_content[:400] for doc in context_docs)
     prompt = FAITHFULNESS_PROMPT.format(
         question=question,
@@ -74,12 +74,13 @@ def answer_faithfulness(
         answer=answer,
     )
     try:
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",  # Fast and cheap for eval
-            max_tokens=200,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw = response.content[0].text.strip()
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        raw = response.text.strip()
+        # Strip markdown code fences if present
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
         result = json.loads(raw)
         return float(result["score"]), result.get("reason", "")
     except Exception as e:
@@ -90,7 +91,8 @@ def run_eval(k: int = 5) -> dict:
     with open(QA_PATH) as f:
         qa_pairs = json.load(f)
 
-    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    # Use Flash for eval — fast and free
+    judge_client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
     results = []
 
     print(f"\nRunning evaluation on {len(qa_pairs)} questions (k={k})\n{'='*60}")
@@ -120,7 +122,7 @@ def run_eval(k: int = 5) -> dict:
 
         if result.sources:
             faith_score, faith_reason = answer_faithfulness(
-                question, result.answer, result.sources, client
+                question, result.answer, result.sources, judge_client
             )
             time.sleep(0.5)  # Rate limit courtesy
         else:
