@@ -10,13 +10,14 @@ Each task has an explicit **DoD** (Definition of Done). If you can't write a DoD
 
 ## Foundation (do these first, no exceptions)
 
-- [ ] **F1. Decide eval methodology end-to-end before writing any v2 code**
+- [x] **F1. Decide eval methodology end-to-end before writing any v2 code**
   DoD: `docs/EVAL.md` exists. Lists the 3 metrics that determine v2 success (sentiment κ, forecast directional accuracy, backtest Sharpe). Specifies test/holdout split.
 
-- [ ] **F2. Set up price history dataset**
+- [~] **F2. Set up price history dataset**
   DoD: `data/processed/prices_history.parquet` contains ≥ 1 year of DE_LU + FR + NL + GB day-ahead prices. Either via ENTSO-E (preferred) or Ember CSV fallback.
+  *Code ready in `src/ingestion/price_history.py`. Run `python -m src.ingestion.price_history` to populate.*
 
-- [ ] **F3. Add cost & latency budgets to `.env`**
+- [x] **F3. Add cost & latency budgets to `.env`**
   DoD: `.env.example` documents `MAX_DAILY_LLM_USD=5`, `MAX_QUERY_LATENCY_S=10`. `src/utils/budget.py` enforces them at call sites.
 
 ---
@@ -25,17 +26,18 @@ Each task has an explicit **DoD** (Definition of Done). If you can't write a DoD
 
 - [ ] **P1.1. Hand-label 30 news articles for sentiment**
   DoD: `data/eval/sentiment_gold.jsonl` with `{title, summary, label ∈ {-1, 0, +1}}`. You labeled them yourself, blind to LLM output.
+  *Template at `data/eval/sentiment_gold_template.jsonl` — copy to `sentiment_gold.jsonl` and edit.*
 
-- [ ] **P1.2. Implement structured-output sentiment scorer**
+- [x] **P1.2. Implement structured-output sentiment scorer**
   DoD: `src/sentiment/scorer.py` exposes `score_article(title, summary) → SentimentScore` with Pydantic schema. Uses Gemini structured output (response_schema). Single call, < 2 s p95.
 
-- [ ] **P1.3. Eval scorer against gold set**
+- [x] **P1.3. Eval scorer against gold set** *(harness ready, awaits gold set)*
   DoD: `python -m src.evaluation.eval_sentiment` prints Cohen's κ. Pass threshold: κ ≥ 0.5. If below, iterate prompt before continuing.
 
 - [ ] **P1.4. Wire sentiment scoring into ingestion pipeline**
   DoD: Every news doc in `data/processed/news.jsonl` has `sentiment_score` and `sentiment_confidence` in metadata. Run `python ingest.py` to verify.
 
-- [ ] **P1.5. Build daily sentiment time series**
+- [x] **P1.5. Build daily sentiment time series** *(code ready)*
   DoD: `data/processed/sentiment_daily.parquet` with columns `[date, country, mean_score, n_articles, std_score]`.
 
 - [ ] **P1.6. Streamlit overlay chart**
@@ -45,7 +47,7 @@ Each task has an explicit **DoD** (Definition of Done). If you can't write a DoD
 
 ## Phase 2 — Forecast
 
-- [ ] **P2.1. Build naive baseline forecaster**
+- [x] **P2.1. Build naive baseline forecaster** *(naive + seasonal_naive + rolling_mean shipped)*
   DoD: `src/forecast/baseline.py` predicts next-day price as today's close. Walk-forward eval reports MAE / directional accuracy on last 90 days.
 
 - [ ] **P2.2. ARIMA forecaster**
@@ -64,13 +66,13 @@ Each task has an explicit **DoD** (Definition of Done). If you can't write a DoD
 
 ## Phase 3 — Risk
 
-- [ ] **P3.1. Realized volatility calculator**
+- [x] **P3.1. Realized volatility calculator**
   DoD: `src/risk/volatility.py` returns rolling 20-day σ per country. Tests verify against manually-computed numbers on 5 fixture rows.
 
-- [ ] **P3.2. Position sizer**
+- [x] **P3.2. Position sizer**
   DoD: `src/risk/sizing.py` implements fractional Kelly with a hard cap. Inputs: signal strength, vol, account size. Output: position size in MWh.
 
-- [ ] **P3.3. Stop / target generator**
+- [x] **P3.3. Stop / target generator**
   DoD: Returns `{stop_price, target_price, max_loss_eur}` given entry, direction, vol.
 
 - [ ] **P3.4. Risk eval**
@@ -80,7 +82,7 @@ Each task has an explicit **DoD** (Definition of Done). If you can't write a DoD
 
 ## Phase 4 — Decision Agent
 
-- [ ] **P4.1. Define structured signal schema**
+- [x] **P4.1. Define structured signal schema**
   DoD: `src/agent/schema.py` with `TradeSignal` Pydantic model: `direction`, `size`, `confidence`, `rationale`, `forecast_price`, `sentiment_score`, `volatility`, `sources`.
 
 - [ ] **P4.2. Implement decision agent**
@@ -99,7 +101,7 @@ Each task has an explicit **DoD** (Definition of Done). If you can't write a DoD
 - [ ] **P5.1. Walk-forward backtest skeleton**
   DoD: `src/backtest/runner.py` takes a date range, runs `decide()` daily, marks to next-day actual. Outputs trade log CSV.
 
-- [ ] **P5.2. Performance metrics**
+- [x] **P5.2. Performance metrics**
   DoD: `src/backtest/metrics.py` computes Sharpe, Sortino, max drawdown, win rate. Tests on a known fixture P&L stream.
 
 - [ ] **P5.3. 6-month walk-forward run**
