@@ -17,6 +17,7 @@ from src.agent.schema import ForecastResult
 
 PRICES_PATH = Path("data/processed/prices_history.parquet")
 
+__all__ = ["naive_forecast", "seasonal_naive_forecast", "rolling_mean_forecast"]
 
 def _load_prices() -> pd.DataFrame:
     if not PRICES_PATH.exists():

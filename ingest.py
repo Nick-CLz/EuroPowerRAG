@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 from src.ingestion import entsoe_client, pdf_loader, rss_scraper
+from src.sentiment import aggregator
 from src.pipeline import chunker
 
 
@@ -44,15 +45,21 @@ def main(skip_index: bool = False) -> int:
     print(f"\n  Total raw documents: {total_raw}")
 
     if skip_index:
-        print("\n[4/4] Skipping indexing (--no-index)")
+        print("\n[4/5] Skipping indexing (--no-index)")
     else:
-        print("\n[4/4] Chunking & Indexing into ChromaDB")
+        print("\n[4/5] Chunking & Indexing into ChromaDB")
         try:
             n_chunks = chunker.run()
             print(f"  Total chunks indexed: {n_chunks}")
         except Exception as e:
             print(f"  Indexing failed: {e}")
             return 1
+
+    print("\n[5/5] Sentiment Aggregation")
+    try:
+        aggregator.run()
+    except Exception as e:
+        print(f"  Sentiment aggregation failed: {e}")
 
     elapsed = time.time() - start
     print(f"\n=== Done in {elapsed:.1f}s ===\n")

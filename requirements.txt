@@ -1,13 +1,13 @@
-langchain>=0.3.0
-langchain-text-splitters>=0.3.0
-langchain-google-genai>=2.0.0
-langchain-chroma>=0.1.4
-langchain-community>=0.3.0
+langchain==1.2.15
+langchain-text-splitters==1.1.2
+langchain-google-genai==4.2.2
+langchain-chroma==1.1.0
+langchain-community==0.4.1
 chromadb>=0.5.0
-google-genai>=1.0.0
+google-genai==1.73.1
 entsoe-py>=0.6.0
 feedparser>=6.0.0
-streamlit>=1.38.0
+streamlit==1.56.0
 apscheduler>=3.10.0
 pypdf>=4.0.0
 requests>=2.31.0
@@ -23,3 +23,4 @@ scikit-learn>=1.5.0
 statsmodels>=0.14.0
 xgboost>=2.0.0
 pyarrow>=15.0.0
+anthropic==0.97.0

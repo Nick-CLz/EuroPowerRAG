@@ -46,6 +46,39 @@ def start_scheduler():
         name="Daily ENTSO-E + News Ingestion",
         replace_existing=True,
     )
+    
+    def run_paper_trades():
+        from src.agent.decide import decide
+        from datetime import date
+        import sqlite3
+        
+        with sqlite3.connect("data/paper_trades.db") as conn:
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS paper_trades "
+                "(timestamp TEXT, country TEXT, signal TEXT, "
+                "executed_price REAL, mark_price REAL, pnl REAL)"
+            )
+            today = date.today()
+            for country in ["DE_LU", "FR", "NL", "GB"]:
+                try:
+                    signal = decide(country, today)
+                    conn.execute(
+                        "INSERT INTO paper_trades "
+                        "(timestamp, country, signal, executed_price) "
+                        "VALUES (datetime('now'), ?, ?, ?)",
+                        (country, signal.direction.value, signal.forecast_price_eur_mwh),
+                    )
+                except Exception as exc:
+                    log.error("Paper trade failed for %s: %s", country, exc)
+            conn.commit()
+
+    scheduler.add_job(
+        run_paper_trades,
+        trigger=CronTrigger(hour=14, minute=0),
+        id="daily_paper_trade",
+        name="Daily Paper Trading",
+        replace_existing=True,
+    )
 
     log.info("Scheduler started — ingestion runs daily at 07:00 UTC")
     log.info("Press Ctrl+C to stop")

@@ -30,6 +30,9 @@ PRICING = {
     "gemini-2.5-pro": {"input_per_1m": 0.0, "output_per_1m": 0.0},
     "gemini-2.0-flash": {"input_per_1m": 0.0, "output_per_1m": 0.0},
     "gemini-embedding-001": {"input_per_1m": 0.0, "output_per_1m": 0.0},
+    "claude-sonnet-4-6": {"input_per_1m": 3.0, "output_per_1m": 15.0},
+    "claude-haiku-4-5": {"input_per_1m": 0.25, "output_per_1m": 1.25},
+    "claude-opus-4-7": {"input_per_1m": 15.0, "output_per_1m": 75.0},
 }
 
 
@@ -44,6 +47,7 @@ class CallRecord:
     duration_s: float
     input_tokens: int = 0
     output_tokens: int = 0
+    cached_tokens: int = 0
     cost_usd: float = 0.0
     model: str = ""
 
@@ -84,10 +88,13 @@ class BudgetTracker:
                         records.append(CallRecord(**d))
         return records
 
-    def estimate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
+    def estimate_cost(self, model: str, input_tokens: int, output_tokens: int, cached_tokens: int = 0) -> float:
         rates = PRICING.get(model, {"input_per_1m": 0.0, "output_per_1m": 0.0})
+        # Claude cached token cost is typically 10% of input token cost
+        cache_rate = rates["input_per_1m"] * 0.1
         return (
             (input_tokens / 1_000_000) * rates["input_per_1m"]
+            + (cached_tokens / 1_000_000) * cache_rate
             + (output_tokens / 1_000_000) * rates["output_per_1m"]
         )
 
@@ -118,6 +125,7 @@ class BudgetTracker:
                 model=record.model,
                 input_tokens=record.input_tokens,
                 output_tokens=record.output_tokens,
+                cached_tokens=record.cached_tokens,
             )
             with open(self.log_path, "a") as f:
                 f.write(json.dumps(asdict(record)) + "\n")

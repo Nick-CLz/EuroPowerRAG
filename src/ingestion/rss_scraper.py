@@ -96,6 +96,16 @@ def scrape_feeds(max_per_feed: int = 25) -> list[dict]:
                     f"Source: {source} | Link: {link}"
                 )
 
+                try:
+                    from src.sentiment.scorer import score_article
+                    sentiment = score_article(title=title, summary=summary_clean)
+                    score_val = sentiment.score
+                    conf_val = sentiment.confidence
+                except Exception as e:
+                    print(f"  [Sentiment] Scoring failed for '{title}': {e}")
+                    score_val = 0.0
+                    conf_val = 0.0
+
                 documents.append(
                     {
                         "text": doc_text,
@@ -107,6 +117,8 @@ def scrape_feeds(max_per_feed: int = 25) -> list[dict]:
                             "date": _parse_date(entry),
                             "title": title,
                             "url": link,
+                            "sentiment_score": score_val,
+                            "sentiment_confidence": conf_val,
                         },
                     }
                 )

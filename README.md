@@ -18,16 +18,36 @@ A retrieval-augmented generation system for European power market intelligence. 
 
 ```mermaid
 graph LR
-    A[ENTSO-E API<br/>Prices & Generation] --> D[Raw JSONL]
-    B[RSS Feeds<br/>EIA · Ember · BBC · Guardian] --> D
+    A[ENTSO-E API<br/>Prices & Generation] --> D[Raw JSONL/Parquet]
+    B[RSS Feeds<br/>EIA · BBC · Guardian] --> D
     C[PDF Reports<br/>ACER · IEA] --> D
-    D --> E[LangChain<br/>RecursiveCharacterTextSplitter]
+    D --> E[LangChain<br/>TextSplitter]
     E --> F[Google AI Studio<br/>text-embedding-004]
     F --> G[(ChromaDB<br/>Local vector index)]
     H[User Query] --> I[Retriever<br/>+ Metadata Filter]
     G --> I
-    I --> J[Google AI Studio<br/>Gemini 2.0 Flash<br/>free tier]
+    I --> J[Google AI Studio<br/>Gemini 2.0 Flash]
     J --> K[Answer + Citations]
+    
+    L[v2 Multi-Agent Orchestrator] --> M[ingestion_curator]
+    L --> N[sentiment_analyst]
+    L --> O[forecast_modeler]
+    L --> P[decision_agent]
+    L --> Q[backtest_reporter]
+```
+
+### v2 Multi-Agent Architecture (Planner-Worker)
+
+```text
+                    ┌─────────────────────────────┐
+                    │   orchestrator (opus-4-7)   │
+                    │   plans · routes · gates    │
+                    └──────────────┬──────────────┘
+        ┌────────────┬─────────────┼─────────────┬────────────┐
+        ▼            ▼             ▼             ▼            ▼
+   ingestion_   sentiment_    forecast_     decision_    backtest_
+   curator      analyst       modeler       agent        reporter
+   (sonnet)     (haiku)       (sonnet)      (sonnet)     (sonnet)
 ```
 
 **Stack:** Python 3.11 · LangChain 0.3 · ChromaDB · Google AI Studio (free) · Streamlit · APScheduler
